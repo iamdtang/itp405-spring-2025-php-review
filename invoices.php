@@ -3,7 +3,7 @@
 $pdo = new PDO('sqlite:chinook.db');
 
 $sql = '
-  SELECT invoices.InvoiceId, invoices.InvoiceDate, invoices.Total, customers.FirstName, customers.LastName
+  SELECT invoices.InvoiceId, invoices.InvoiceDate, invoices.Total, customers.FirstName, customers.LastName, customers.FirstName || " " || customers.LastName AS CustomerFullName
   FROM invoices
   INNER JOIN customers
   ON invoices.CustomerId = customers.CustomerId
@@ -17,7 +17,12 @@ $sql = '
 // ';
 
 if (isset($_GET['q'])) {
-  $sql = "$sql WHERE customers.FirstName LIKE :first_name";
+  $sql = "
+    $sql
+    WHERE customers.FirstName LIKE :first_name
+    OR customers.LastName LIKE :last_name
+    OR CustomerFullName = :full_name
+  ";
 }
 
 $sql = "$sql ORDER BY invoices.InvoiceDate DESC";
@@ -27,6 +32,9 @@ $statement = $pdo->prepare($sql); // prepared statement
 if (isset($_GET['q'])) {
   $boundSearchParam = '%' . $_GET['q'] . '%';
   $statement->bindParam(':first_name', $boundSearchParam);
+  $statement->bindParam(':last_name', $boundSearchParam);
+
+  $statement->bindParam(':full_name', $_GET['q']);
 }
 
 $statement->execute();
@@ -48,7 +56,7 @@ $invoices = $statement->fetchAll(PDO::FETCH_OBJ);
       <input
         type="search"
         class="form-control"
-        placeholder="Search by first name"
+        placeholder="Search by name"
         name="q"
         value="<?php echo isset($_GET['q']) ? $_GET['q'] : '' ?>"
       />
