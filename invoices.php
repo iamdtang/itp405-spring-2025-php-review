@@ -3,10 +3,19 @@
 $pdo = new PDO('sqlite:chinook.db');
 
 $sql = '
-  SELECT invoices.InvoiceId, invoices.InvoiceDate, invoices.Total
+  SELECT invoices.InvoiceId, invoices.InvoiceDate, invoices.Total, customers.FirstName, customers.LastName
   FROM invoices
+  INNER JOIN customers
+  ON invoices.CustomerId = customers.CustomerId
   ORDER BY invoices.InvoiceDate DESC
 ';
+
+// $sql = '
+//   SELECT invoices.InvoiceId, invoices.InvoiceDate, invoices.Total, customers.FirstName, customers.LastName
+//   FROM invoices, customers
+//   WHERE invoices.CustomerId = customers.CustomerId
+//   ORDER BY invoices.InvoiceDate DESC
+// ';
 
 $statement = $pdo->prepare($sql); // prepared statement
 $statement->execute();
@@ -29,6 +38,7 @@ $invoices = $statement->fetchAll(PDO::FETCH_OBJ);
         <tr>
           <th>Date</th>
           <th>Invoice Number</th>
+          <th>Customer</th>
           <th>Total</th>
         </tr>
       </thead>
@@ -40,6 +50,9 @@ $invoices = $statement->fetchAll(PDO::FETCH_OBJ);
             </td>
             <td>
               <?php echo $invoice->InvoiceId ?>
+            </td>
+            <td>
+              <?php echo $invoice->FirstName . ' ' . $invoice->LastName ?>
             </td>
             <td>
               $<?php echo $invoice->Total ?>
